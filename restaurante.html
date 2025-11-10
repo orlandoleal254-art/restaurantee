@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurante Español "Sabores de España"</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Estilos generales y reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            line-height: 1.6;
+            color: #f0f0f0;
+            background-color: #121212;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+
+        section {
+            padding: 80px 0;
+        }
+
+        h1, h2, h3, h4 {
+            margin-bottom: 20px;
+            color: #D4AF37;
+        }
+
+        p {
+            margin-bottom: 15px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background-color: #D4AF37;
+            color: #121212;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background-color: #F4CF47;
+            transform: translateY(-3px);
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            border: 2px solid #D4AF37;
+            color: #D4AF37;
+        }
+
+        .btn-secondary:hover {
+            background-color: #D4AF37;
+            color: #121212;
+        }
+
+        /* Header y navegación */
+        header {
+            background-color: rgba(18, 18, 18, 0.95);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #D4AF37;
+            text-decoration: none;
+        }
+
+        .nav-menu {
+            display: flex;
+            list-style: none;
+        }
+
+        .nav-menu li {
+            margin-left: 30px;
+        }
+
+        .nav-menu a {
+            text-decoration: none;
+            color: #f0f0f0;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-menu a:hover {
+            color: #D4AF37;
+        }
+
+        .hamburger {
+            display: none;
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #D4AF37;
+        }
+
+        /* Banner principal */
+        .banner {
+            height: 100vh;
+            background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('https://images.unsplash.com/photo-1559339352-11d035aa65de?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80') no-repeat center center/cover;
+            display: flex;
+            align-items: center;
+            text-align: center;
+            color: white;
+            margin-top: 70px;
+        }
+
+        .banner-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .banner h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: white;
+        }
+
+        .banner p {
+            font-size: 20px;
+            margin-bottom: 30px;
+        }
+
+        .banner-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        /* Sección destacados */
+        .section-title {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .section-title h2 {
+            font-size: 36px;
+            position: relative;
+            display: inline-block;
+            padding-bottom: 15px;
+        }
+
+        .section-title h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 3px;
+            background-color: #D4AF37;
+        }
+
+        .platos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+        }
+
+        .plato-card {
+            background-color: #1e1e1e;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid #333;
+        }
+
+        .plato-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .plato-img {
+            height: 200px;
+            width: 100%;
+            object-fit: cover;
+        }
+
+        .plato-content {
+            padding: 20px;
+        }
+
+        .plato-content h3 {
+            margin-bottom: 10px;
+        }
+
+        .plato-price {
+            font-weight: bold;
+            color: #D4AF37;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+
+        /* Sección carta */
+        .carta-category {
+            margin-bottom: 50px;
+            background-color: #1e1e1e;
+            padding: 30px;
+            border-radius: 8px;
+            border: 1px solid #333;
+        }
+
+        .carta-category h3 {
+            border-bottom: 2px solid #D4AF37;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .carta-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 0;
+            border-bottom: 1px solid #333;
+        }
+
+        .carta-item:last-child {
+            border-bottom: none;
+        }
+
+        .carta-item-name {
+            font-weight: 500;
+        }
+
+        .carta-item-price {
+            color: #D4AF37;
+            font-weight: bold;
+        }
+
+        /* Sección reservas */
+        .reservas {
+            background-color: #1a1a1a;
+        }
+
+        .reserva-form {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #1e1e1e;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            border: 1px solid #333;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #f0f0f0;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #444;
+            border-radius: 4px;
+            font-size: 16px;
+            background-color: #2a2a2a;
+            color: #f0f0f0;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 20px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 20px;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+        }
+
+        .radio-option input {
+            margin-right: 8px;
+        }
+
+        textarea.form-control {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        /* Sección ubicación y horarios */
+        .ubicacion-horarios {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+        }
+
+        .mapa-container {
+            height: 400px;
+            background-color: #1e1e1e;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #333;
+        }
+
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+
+        .horarios-contacto h3 {
+            margin-bottom: 20px;
+        }
+
+        .horarios-list {
+            list-style: none;
+            margin-bottom: 30px;
+        }
+
+        .horarios-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #333;
+        }
+
+        .contacto-info p {
+            margin-bottom: 10px;
+        }
+
+        /* Footer */
+        footer {
+            background-color: #0a0a0a;
+            color: #f0f0f0;
+            padding: 60px 0 20px;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .footer-logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #D4AF37;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .footer-links h4, .footer-contact h4 {
+            margin-bottom: 20px;
+            color: #D4AF37;
+        }
+
+        .footer-links ul {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: 10px;
+        }
+
+        .footer-links a {
+            color: #aaa;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: #f0f0f0;
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid #333;
+        }
+
+        /* Botón de WhatsApp */
+        .whatsapp-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #25D366;
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-size: 32px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 15px rgba(37, 211, 102, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(37, 211, 102, 0);
+            }
+        }
+
+        /* Mensajes de confirmación */
+        .message {
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+            text-align: center;
+            display: none;
+        }
+
+        .success {
+            background-color: #2a4a2a;
+            color: #90EE90;
+            border: 1px solid #3a6a3a;
+        }
+
+        .error {
+            background-color: #4a2a2a;
+            color: #FF7F7F;
+            border: 1px solid #6a3a3a;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hamburger {
+                display: block;
+            }
+
+            .nav-menu {
+                position: fixed;
+                top: 70px;
+                right: -100%;
+                width: 80%;
+                height: calc(100vh - 70px);
+                background-color: #1e1e1e;
+                flex-direction: column;
+                align-items: center;
+                justify-content: flex-start;
+                padding-top: 50px;
+                transition: right 0.3s ease;
+                box-shadow: -5px 0 15px rgba(0, 0, 0, 0.5);
+            }
+
+            .nav-menu.active {
+                right: 0;
+            }
+
+            .nav-menu li {
+                margin: 0 0 30px 0;
+            }
+
+            .banner h1 {
+                font-size: 36px;
+            }
+
+            .banner p {
+                font-size: 18px;
+            }
+
+            .banner-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header y navegación -->
+    <header>
+        <div class="container header-container">
+            <a href="#" class="logo">Sabores de España</a>
+            <button class="hamburger" id="hamburger">☰</button>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="#inicio">Inicio</a></li>
+                <li><a href="#destacados">Destacados</a></li>
+                <li><a href="#carta">Carta</a></li>
+                <li><a href="#reservas">Reservas</a></li>
+                <li><a href="#ubicacion">Ubicación</a></li>
+            </ul>
+        </div>
+    </header>
+
+    <!-- Banner principal -->
+    <section class="banner" id="inicio">
+        <div class="container banner-content">
+            <h1>Auténtica Cocina Española</h1>
+            <p>Disfruta de los sabores tradicionales de España en un ambiente acogedor y familiar</p>
+            <div class="banner-buttons">
+                <a href="#carta" class="btn">Ver Menú</a>
+                <a href="#reservas" class="btn btn-secondary">Reservar Mesa</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sección destacados -->
+    <section id="destacados">
+        <div class="container">
+            <div class="section-title">
+                <h2>Platos Destacados</h2>
+                <p>Nuestras especialidades más populares</p>
+            </div>
+            <div class="platos-grid">
+                <div class="plato-card">
+                    <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" alt="Paella Valenciana" class="plato-img">
+                    <div class="plato-content">
+                        <h3>Paella Valenciana</h3>
+                        <p>Arroz con pollo, conejo, judías verdes y garrofón, cocinado con azafrán.</p>
+                        <div class="plato-price">€18.50</div>
+                        <a href="#reservas" class="btn">Pedir Ahora</a>
+                    </div>
+                </div>
+                <div class="plato-card">
+                    <img src="https://images.unsplash.com/photo-1540420773420-3366772f4999?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" alt="Jamón Ibérico" class="plato-img">
+                    <div class="plato-content">
+                        <h3>Jamón Ibérico</h3>
+                        <p>Finas lonchas de jamón ibérico de bellota, uno de los manjares más preciados.</p>
+                        <div class="plato-price">€22.00</div>
+                        <a href="#reservas" class="btn">Pedir Ahora</a>
+                    </div>
+                </div>
+                <div class="plato-card">
+                    <img src="https://images.unsplash.com/photo-1572802419224-296b0aeee0d9?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" alt="Gambas al Ajillo" class="plato-img">
+                    <div class="plato-content">
+                        <h3>Gambas al Ajillo</h3>
+                        <p>Gambas frescas salteadas con ajo, guindilla y aceite de oliva virgen extra.</p>
+                        <div class="plato-price">€14.50</div>
+                        <a href="#reservas" class="btn">Pedir Ahora</a>
+                    </div>
+                </div>
+                <div class="plato-card">
+                    <img src="https://images.unsplash.com/photo-1563379926898-05f4575a45d8?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80" alt="Tortilla Española" class="plato-img">
+                    <div class="plato-content">
+                        <h3>Tortilla Española</h3>
+                        <p>Clásica tortilla de patatas con cebolla, jugosa por dentro y dorada por fuera.</p>
+                        <div class="plato-price">€9.50</div>
+                        <a href="#reservas" class="btn">Pedir Ahora</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sección carta -->
+    <section id="carta" style="background-color: #1a1a1a;">
+        <div class="container">
+            <div class="section-title">
+                <h2>Nuestra Carta</h2>
+                <p>Descubre nuestra completa selección de platos españoles</p>
+            </div>
+            
+            <div class="carta-category">
+                <h3>Platos Principales</h3>
+                <div class="carta-item">
+                    <div class="carta-item-name">Paella Valenciana</div>
+                    <div class="carta-item-price">€18.50</div>
+                </div>
+                <div class="carta-item">
+                    <div class="carta-item-name">Paella de Mariscos</div>
+                    <div class="carta-item-price">€22.00</div>
+                </div>
+                <div class="carta-item">
+                    <div class="carta-item-name">Cocido Madrileño</div>
+                    <div class="carta-item-price">€16.50</div>
+                </div>
+                <div class="carta-item">
+                    <div class="carta-item-name">Fabada Asturiana</div>
+                    <div class="carta-item-price">€15.00</div>
+                </div>
+                <div class="carta-item">
+                    <div class="carta-item-name">Pulpo a la Gallega</div>
+                    <div class="carta-item-price">€17.50</div>
+                </div>
+                <div class="carta-item">
+                    <div class="carta-item-name">Cordero Asado</div>
+                    <div class="carta-item-price">€20.00</div>
+                </div>
+            </div>
+            
+            <div class="carta-category">
+                <h3>Tapas y Entrantes</h3>
+                <div class="carta-item">
+                    <div class="carta-item-name">Jamón Ibérico (100g)</div>
+                    <div class="carta-item-price">€22.00</div>
+                </div>
+                <div class="carta-item">
+                    <div class="carta-item-name">Queso Manchego</div>
+                    <div class="carta-item-price">€12.50</div>
+                </div>
+                <div class="carta-item">
+                    <div class="carta-item-name">Gambas al Ajillo</div>
+                    <div class="carta-item-price">€14.50</div>
+                </div>
+                <div class="carta-item">
+                    <div class="carta-item-name">Tortilla Española</div>
+                    <div class="carta-item-price">€9.50</div>
+                </div>
+                <div class="carta-item">
+                    <div class="carta-item-name">Patatas Bravas</div>
+                    <div class="carta-item-price">€8.00</div>
+                </div>
+                <div class="carta-item">
+                    <div class="carta-item-name">Calamares a la Romana</div>
+                    <div class="carta-item-price">€11.50</div>
+                </div>
+            </div>
+            
+            <div class="carta-category">
+                <h3>Bebidas</h3>
+                <div class="carta-item">
+                    <div class="carta-item-name">Vino Tinto (Copa)</div>
+                    <div class="carta-item-price">€4.50</div>
+                </div>
+                <div class="carta-item">
+                    <div class="carta-item-name">Vino Blanco (Copa)</div>
+                    <div class="carta-item-price">€4.50</div>
+                </div>
+                <div class="carta-item">
+                    <div class="carta-item-name">Sangría (Jarra 1L)</div>
+                    <div class="carta-item-price">€12.00</div>
+                </div>
+                <div class="carta-item">
+                    <div class="carta-item-name">Cerveza (Caña)</div>
+                    <div class="carta-item-price">€3.00</div>
+                </div>
+                <div class="carta-item">
+                    <div class="carta-item-name">Refrescos</div>
+                    <div class="carta-item-price">€2.50</div>
+                </div>
+                <div class="carta-item">
+                    <div class="carta-item-name">Agua Mineral</div>
+                    <div class="carta-item-price">€2.00</div>
+                </div>
+            </div>
+            
+            <div class="carta-category">
+                <h3>Postres</h3>
+                <div class="carta-item">
+                    <div class="carta-item-name">Flan de Huevo</div>
+                    <div class="carta-item-price">€5.50</div>
+                </div>
+                <div class="carta-item">
+                    <div class="carta-item-name">Crema Catalana</div>
+                    <div class="carta-item-price">€6.00</div>
+                </div>
+                <div class="carta-item">
+                    <div class="carta-item-name">Tarta de Santiago</div>
+                    <div class="carta-item-price">€6.50</div>
+                </div>
+                <div class="carta-item">
+                    <div class="carta-item-name">Churros con Chocolate</div>
+                    <div class="carta-item-price">€7.00</div>
+                </div>
+                <div class="carta-item">
+                    <div class="carta-item-name">Helado Artesanal</div>
+                    <div class="carta-item-price">€5.00</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sección reservas -->
+    <section id="reservas" class="reservas">
+        <div class="container">
+            <div class="section-title">
+                <h2>Reserva tu Mesa</h2>
+                <p>Garantiza tu experiencia gastronómica reservando con antelación</p>
+            </div>
+            
+            <div id="message" class="message"></div>
+            
+            <form class="reserva-form" id="reservaForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="nombre">Nombre</label>
+                        <input type="text" id="nombre" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="apellido">Apellido</label>
+                        <input type="text" id="apellido" class="form-control" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="telefono">Teléfono</label>
+                    <input type="tel" id="telefono" class="form-control" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="fecha">Fecha</label>
+                        <input type="date" id="fecha" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="hora">Hora</label>
+                        <input type="time" id="hora" class="form-control" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="personas">Número de Personas</label>
+                    <select id="personas" class="form-control" required>
+                        <option value="">Selecciona...</option>
+                        <option value="1">1 persona</option>
+                        <option value="2">2 personas</option>
+                        <option value="3">3 personas</option>
+                        <option value="4">4 personas</option>
+                        <option value="5">5 personas</option>
+                        <option value="6">6 personas</option>
+                        <option value="7">7 personas</option>
+                        <option value="8">8 personas</option>
+                        <option value="9">9 o más personas</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Tipo de Reserva</label>
+                    <div class="radio-group">
+                        <div class="radio-option">
+                            <input type="radio" id="normal" name="tipo" value="normal" checked>
+                            <label for="normal">Normal</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="vip" name="tipo" value="vip">
+                            <label for="vip">VIP (Zona Privada)</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="notas">Notas Adicionales</label>
+                    <textarea id="notas" class="form-control" placeholder="Alergias, preferencias, celebraciones especiales..."></textarea>
+                </div>
+                <button type="submit" class="btn">Confirmar Reserva</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Sección ubicación y horarios -->
+    <section id="ubicacion">
+        <div class="container">
+            <div class="section-title">
+                <h2>Ubicación y Horarios</h2>
+                <p>Encuéntranos y descubre nuestros horarios de atención</p>
+            </div>
+            <div class="ubicacion-horarios">
+                <div class="mapa-container">
+                    <div id="map"></div>
+                </div>
+                <div class="horarios-contacto">
+                    <h3>Horarios de Atención</h3>
+                    <ul class="horarios-list">
+                        <li><strong>Lunes a Jueves:</strong> 13:00 - 23:00</li>
+                        <li><strong>Viernes y Sábado:</strong> 13:00 - 00:00</li>
+                        <li><strong>Domingo:</strong> 13:00 - 22:00</li>
+                    </ul>
+                    <p><strong>Nota:</strong> Los horarios de cocina terminan 1 hora antes del cierre.</p>
+                    
+                    <h3>Información de Contacto</h3>
+                    <div class="contacto-info">
+                        <p><strong>Dirección:</strong> Calle Gran Vía, 123, Madrid</p>
+                        <p><strong>Teléfono:</strong> +34 91 123 45 67</p>
+                        <p><strong>Email:</strong> info@saboresdeespana.com</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-about">
+                    <a href="#" class="footer-logo">Sabores de España</a>
+                    <p>Ofrecemos auténtica cocina española preparada con ingredientes frescos y recetas tradicionales. Disfruta de una experiencia gastronómica única en un ambiente acogedor.</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Enlaces Rápidos</h4>
+                    <ul>
+                        <li><a href="#inicio">Inicio</a></li>
+                        <li><a href="#destacados">Platos Destacados</a></li>
+                        <li><a href="#carta">Carta</a></li>
+                        <li><a href="#reservas">Reservas</a></li>
+                        <li><a href="#ubicacion">Ubicación</a></li>
+                    </ul>
+                </div>
+                <div class="footer-contact">
+                    <h4>Contacto</h4>
+                    <p>Calle Gran Vía, 123</p>
+                    <p>28013 Madrid, España</p>
+                    <p>Tel: +34 91 123 45 67</p>
+                    <p>Email: info@saboresdeespana.com</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2023 Sabores de España. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Botón de WhatsApp -->
+    <a href="https://wa.me/34123456789" class="whatsapp-btn" target="_blank">
+        <i class="fab fa-whatsapp"></i>
+    </a>
+
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script>
+        // Toggle del menú hamburguesa
+        const hamburger = document.getElementById('hamburger');
+        const navMenu = document.getElementById('navMenu');
+
+        hamburger.addEventListener('click', () => {
+            navMenu.classList.toggle('active');
+        });
+
+        // Cerrar menú al hacer clic en un enlace
+        const navLinks = document.querySelectorAll('.nav-menu a');
+        navLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                navMenu.classList.remove('active');
+            });
+        });
+
+        // Inicializar mapa
+        function initMap() {
+            // Coordenadas del restaurante (Madrid, España)
+            const restaurantLocation = [40.4168, -3.7038];
+            
+            // Crear mapa
+            const map = L.map('map').setView(restaurantLocation, 15);
+            
+            // Añadir capa de tiles
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+            
+            // Añadir marcador
+            L.marker(restaurantLocation).addTo(map)
+                .bindPopup('Sabores de España<br>Calle Gran Vía, 123, Madrid')
+                .openPopup();
+        }
+
+        // Inicializar el mapa cuando la página cargue
+        document.addEventListener('DOMContentLoaded', initMap);
+
+        // Validación y envío del formulario de reservas
+        const reservaForm = document.getElementById('reservaForm');
+        const messageDiv = document.getElementById('message');
+        
+        reservaForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            // Validación básica
+            const nombre = document.getElementById('nombre').value;
+            const apellido = document.getElementById('apellido').value;
+            const telefono = document.getElementById('telefono').value;
+            const fecha = document.getElementById('fecha').value;
+            const hora = document.getElementById('hora').value;
+            const personas = document.getElementById('personas').value;
+            const tipo = document.querySelector('input[name="tipo"]:checked').value;
+            const notas = document.getElementById('notas').value;
+            
+            if (!nombre || !apellido || !telefono || !fecha || !hora || !personas) {
+                showMessage('Por favor, complete todos los campos obligatorios.', 'error');
+                return;
+            }
+            
+            // Crear objeto con los datos de la reserva
+            const reserva = {
+                nombre,
+                apellido,
+                telefono,
+                fecha,
+                hora,
+                personas,
+                tipo,
+                notas,
+                fechaReserva: new Date().toISOString()
+            };
+            
+            // Guardar reserva en localStorage (simulando guardado en archivo txt)
+            saveReservation(reserva);
+            
+            // Mostrar mensaje de éxito
+            showMessage('¡Reserva enviada con éxito! Nos pondremos en contacto para confirmar.', 'success');
+            
+            // Limpiar formulario
+            reservaForm.reset();
+        });
+
+        // Función para mostrar mensajes
+        function showMessage(text, type) {
+            messageDiv.textContent = text;
+            messageDiv.className = `message ${type}`;
+            messageDiv.style.display = 'block';
+            
+            // Ocultar mensaje después de 5 segundos
+            setTimeout(() => {
+                messageDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        // Función para guardar reserva (simulación de guardado en archivo txt)
+        function saveReservation(reserva) {
+            // En un entorno real, aquí enviaríamos los datos a un servidor
+            // Para este ejemplo, guardaremos en localStorage
+            let reservas = JSON.parse(localStorage.getItem('reservas')) || [];
+            reservas.push(reserva);
+            localStorage.setItem('reservas', JSON.stringify(reservas));
+            
+            // Simular descarga de archivo txt
+            const textoReserva = `RESERVA SABORES DE ESPAÑA\n\n` +
+                `Nombre: ${reserva.nombre} ${reserva.apellido}\n` +
+                `Teléfono: ${reserva.telefono}\n` +
+                `Fecha: ${reserva.fecha}\n` +
+                `Hora: ${reserva.hora}\n` +
+                `Personas: ${reserva.personas}\n` +
+                `Tipo: ${reserva.tipo}\n` +
+                `Notas: ${reserva.notas || 'Ninguna'}\n` +
+                `Fecha de reserva: ${new Date(reserva.fechaReserva).toLocaleString()}\n`;
+            
+            // Crear blob y enlace de descarga
+            const blob = new Blob([textoReserva], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `reserva_${reserva.nombre}_${reserva.apellido}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Smooth scrolling para enlaces internos
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                const targetId = this.getAttribute('href');
+                if (targetId === '#') return;
+                
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    window.scrollTo({
+                        top: targetElement.offsetTop - 70,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
